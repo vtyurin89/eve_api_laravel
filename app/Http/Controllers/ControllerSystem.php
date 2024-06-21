@@ -8,9 +8,10 @@ use App\Models\System;
 
 class ControllerSystem extends Controller
 {
-    public function index () {
+    public function index (Request $request) {
         $systems = System::all();
-        return view('index', compact('systems'));
+        $req = $request;
+        return view('index', compact('systems', 'req'));
     }
 
     public function update () {

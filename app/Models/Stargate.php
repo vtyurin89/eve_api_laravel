@@ -12,4 +12,9 @@ class Stargate extends Model
     use SoftDeletes;
     protected $table = "stargates";
     protected $guarded = [];
+
+    public function system()
+    {
+        return $this->belongsTo('App\Models\System');
+    }
 }

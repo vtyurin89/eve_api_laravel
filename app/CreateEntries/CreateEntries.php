@@ -160,7 +160,7 @@ class CreateEntries
         echo "FUNCTION FINISHED";
     }
 
-    private function createStargateOrStation($entityClass, $entityId, $urlKey)
+    public function createStargateOrStation($entityClass, $entityId, $urlKey)
     {
         $ch = curl_init();
 
@@ -201,6 +201,42 @@ class CreateEntries
         }
     }
 
+    public function createIndividualSystem($system_id)
+        {   
+            $curlSystemSession = curl_init();
+            curl_setopt($curlSystemSession, CURLOPT_URL, $this->eveSwaggerUrls['systems'] . $system_id);
+            curl_setopt($curlSystemSession, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curlSystemSession, CURLOPT_SSL_VERIFYPEER, false); 
+            curl_setopt($curlSystemSession, CURLOPT_SSL_VERIFYHOST, false); 
+
+            $systemServerResponse = curl_exec($curlSystemSession);
+            curl_close($curlSystemSession);
+            $systemServerResponse = json_decode($systemServerResponse);
+
+            $systemData = [
+                'id' => $systemServerResponse->system_id,
+                'name' => $systemServerResponse->name,
+                'x' => floatval($systemServerResponse->position->x),
+                'y' => floatval($systemServerResponse->position->y),
+                'z' => floatval($systemServerResponse->position->z),
+                'security_class' => $systemServerResponse->security_class ?? null,
+                'security_status' => isset($systemServerResponse->security_status) ? floatval($systemServerResponse->security_status) : null,
+                'constellation_id' => $systemServerResponse->constellation_id,
+            ];
+            
+            $system = System::firstOrCreate(
+                ['id' => $systemServerResponse->system_id],
+                $systemData
+            );
+            
+            if ($system->wasRecentlyCreated) {
+                echo("System {$system->id} successfully created! \n");
+            } else {
+                echo("System {$system->id} already exists! \n");
+            }
+            return $systemServerResponse;
+        }
+
     public function createSystemsStargatesStations()
     {
         echo "CREATING SYSTEMS, STARGATES AND STATIONS \n";
@@ -214,17 +250,20 @@ class CreateEntries
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
         
         $server_response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if (curl_errno($ch)) {
             echo 'CURL error: ' . curl_error($ch) . "\n";
+        } else if ($http_code >= 500) {
+            echo "Server error: HTTP code $http_code. Exiting...\n";
+            curl_close($ch);
+            exit(1);
         } else {
             echo "CURL retrieved system list successfully! \n";
         }
 
         curl_close($ch);
 
-        
-        // Handle individual system
         $system_list = json_decode($server_response);
 
         $previous_index = -1;
@@ -235,56 +274,40 @@ class CreateEntries
                 break;
             }
             
-            $curlSystemSession = curl_init();
-            curl_setopt($curlSystemSession, CURLOPT_URL, $this->eveSwaggerUrls['systems'] . $system_id);
-            curl_setopt($curlSystemSession, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curlSystemSession, CURLOPT_SSL_VERIFYPEER, false); 
-            curl_setopt($curlSystemSession, CURLOPT_SSL_VERIFYHOST, false); 
-
-            $systemServerResponse = curl_exec($curlSystemSession);
-            curl_close($curlSystemSession);
-            $systemServerResponse = json_decode($systemServerResponse);
-            
+            // Handle individual system
+            $retryDecorator = new RetryDecorator([$this, 'createIndividualSystem']);
             try {
-                $systemData = [
-                    'id' => $systemServerResponse->system_id,
-                    'name' => $systemServerResponse->name,
-                    'x' => floatval($systemServerResponse->position->x),
-                    'y' => floatval($systemServerResponse->position->y),
-                    'z' => floatval($systemServerResponse->position->z),
-                    'security_class' => $systemServerResponse->security_class ?? null,
-                    'security_status' => isset($systemServerResponse->security_status) ? floatval($systemServerResponse->security_status) : null,
-                    'constellation_id' => $systemServerResponse->constellation_id,
-                ];
-                
-                $system = System::firstOrCreate(
-                    ['id' => $systemServerResponse->system_id],
-                    $systemData
-                );
-                
-                if ($system->wasRecentlyCreated) {
-                    echo("System {$system->id} successfully created! \n");
-                } else {
-                    echo("System {$system->id} already exists! \n");
-                }
-    
-                // Creating stargates 
-                if (isset($systemServerResponse->stargates)) {
-                    foreach($systemServerResponse->stargates as $stargateId) {
-                        $this->createStargateOrStation(Stargate::class, $stargateId, 'stargate');
-                    }
-                }
-    
-                // Creating stations
-                if (isset($systemServerResponse->stations)) {
-                    foreach($systemServerResponse->stations as $stationId) {
-                        $this->createStargateOrStation(Station::class, $stationId, 'station');
-                    }
-                }
-    
+                $systemServerResponse = $retryDecorator->execute($system_id);
             } catch (Exception $e) {
-                echo $e;
-                print_r($systemServerResponse);
+                echo "Function failed after max retries: " . $e->getMessage() . "\n";
+                throw new Exception("Something went wrong when creating a System!");
+            }
+
+
+            // Creating stargates 
+            if (isset($systemServerResponse->stargates)) {
+                foreach($systemServerResponse->stargates as $stargateId) {
+                    $retryDecorator = new RetryDecorator([$this, 'createStargateOrStation']);
+                    try {
+                        $retryDecorator->execute(Stargate::class, $stargateId, 'stargate');
+                    } catch (Exception $e) {
+                        echo "Function failed after max retries: " . $e->getMessage() . "\n";
+                        throw new Exception("Something went wrong when creating a Stargate!");
+                    }
+                }
+            }
+
+            // Creating stations
+            if (isset($systemServerResponse->stations)) {
+                foreach($systemServerResponse->stations as $stationId) {
+                    $retryDecorator = new RetryDecorator([$this, 'createStargateOrStation']);
+                    try {
+                        $retryDecorator->execute(Station::class, $stationId, 'station');
+                    } catch (Exception $e) {
+                        echo "Function failed after max retries: " . $e->getMessage() . "\n";
+                        throw new Exception("Something went wrong when creating a Station!");
+                    }
+                }
             }
             
             // Maximum 30 requests per second
@@ -295,6 +318,12 @@ class CreateEntries
             $previous_index = $index;
         }
         echo "FUNCTION FINISHED";
+    }
+
+    public function createAll() {
+        $this->createRegions();
+        $this->createConstellations();
+        $this->createSystemsStargatesStations();
     }
 }
 

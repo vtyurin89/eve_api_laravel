@@ -13,4 +13,9 @@ class Constellation extends Model
 
     protected $table = 'constellations';
     protected $guarded = [];
+
+    public function region()
+    {
+        return $this->belongsTo('App\Models\Region');
+    }
 }

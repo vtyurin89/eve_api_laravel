@@ -12,8 +12,9 @@
 
     </head>
     <body>
+        {{ $req }}
         @foreach($systems as $system) 
-            <h1> {{ $system->x }} </h1>
+            <h1> {{ $system->name }}</h1>
         @endforeach
     </body>
 </html>

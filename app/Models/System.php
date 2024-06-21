@@ -13,4 +13,9 @@ class System extends Model
 
     protected $table = 'systems';
     protected $guarded = [];
+
+    public function constellation()
+    {
+        return $this->belongsTo('App\Models\Constellation');
+    }
 }

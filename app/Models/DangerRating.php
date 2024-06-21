@@ -13,4 +13,9 @@ class DangerRating extends Model
 
     protected $table = 'danger_ratings';
     protected $guarded = [];
+
+    public function system()
+    {
+        return $this->belongsTo('App\Models\System');
+    }
 }

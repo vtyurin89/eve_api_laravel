@@ -13,4 +13,9 @@ class Station extends Model
 
     protected $table = 'stations';
     protected $guarded = [];
+
+    public function system()
+    {
+        return $this->belongsTo('App\Models\System');
+    }
 }

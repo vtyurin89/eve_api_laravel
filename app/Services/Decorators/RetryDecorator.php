@@ -16,13 +16,13 @@ class RetryDecorator
         $this->sleepSeconds = $sleepSeconds;
     }
 
-    public function execute()
+    public function execute(...$args)
     {
         $attempts = 0;
 
         while ($attempts < $this->maxRetries) {
             try {
-                return call_user_func($this->function);
+                return call_user_func($this->function, ...$args);
             } catch (Exception $e) {
                 $attempts++;
                 usleep($this->sleepSeconds * 1000000);
