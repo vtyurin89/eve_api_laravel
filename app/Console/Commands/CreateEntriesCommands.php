@@ -26,7 +26,7 @@ class CreateEntriesCommands extends Command
      */
     public function handle(CreateEntries $createEntries)
     {
-        // $createEntries->createConstellations();
         $createEntries->createAll();
     }
 }
+

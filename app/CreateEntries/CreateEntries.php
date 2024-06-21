@@ -5,39 +5,16 @@ namespace App\CreateEntries;
 use Exception;
 use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station;
 use App\Services\Decorators\RetryDecorator;
+use App\Helpers\Utility;
 
 class CreateEntries
 {
-    public $eveSwaggerUrls = [
-        'systems' => "https://esi.evetech.net/dev/universe/systems/",
-        'stars' => "https://esi.evetech.net/dev/universe/stars/",
-        'regions' => "https://esi.evetech.net/dev/universe/regions/",
-        'constellations' => "https://esi.evetech.net/dev/universe/constellations/",
-        'stargates' => "https://esi.evetech.net/dev/universe/stargates/",
-        'stations'=> "https://esi.evetech.net/dev/universe/stations/",
-    ];
-
     public function createRegions()
     {
         echo "CREATING REGIONS \n";
 
         // Get the list of regions
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $this->eveSwaggerUrls['regions']);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
-        
-        $server_response = curl_exec($ch);
-
-        if (curl_errno($ch)) {
-            echo 'CURL error: ' . curl_error($ch) . "\n";
-        } else {
-            echo "CURL retrieved region list successfully! \n";
-        }
-
-        curl_close($ch);
+        $server_response = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['regions']);
 
         // Handle individual regions
         $region_list = json_decode($server_response);
@@ -50,14 +27,8 @@ class CreateEntries
                 break;
             }
 
-            $curlRegionSession = curl_init();
-            curl_setopt($curlRegionSession, CURLOPT_URL, $this->eveSwaggerUrls['regions'] . $region_id);
-            curl_setopt($curlRegionSession, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curlRegionSession, CURLOPT_SSL_VERIFYPEER, false); 
-            curl_setopt($curlRegionSession, CURLOPT_SSL_VERIFYHOST, false); 
+            $regionServerResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['regions'] . $region_id);
 
-            $regionServerResponse = curl_exec($curlRegionSession);
-            curl_close($curlRegionSession);
             $regionServerResponse = json_decode($regionServerResponse);
 
             $regionData = [
@@ -91,23 +62,7 @@ class CreateEntries
     {
         echo "CREATING CONSTELLATIONS \n";
 
-        // Get the list of constellations
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $this->eveSwaggerUrls['constellations']);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
-        
-        $server_response = curl_exec($ch);
-
-        if (curl_errno($ch)) {
-            echo 'CURL error: ' . curl_error($ch) . "\n";
-        } else {
-            echo "CURL retrieved constellation list successfully! \n";
-        }
-
-        curl_close($ch);
+        $server_response = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['constellations']);
 
         // Handle individual constellations
         $constellation_list = json_decode($server_response);
@@ -120,14 +75,8 @@ class CreateEntries
                 break;
             }
 
-            $curlConstellationSession = curl_init();
-            curl_setopt($curlConstellationSession, CURLOPT_URL, $this->eveSwaggerUrls['constellations'] . $constellation_id);
-            curl_setopt($curlConstellationSession, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curlConstellationSession, CURLOPT_SSL_VERIFYPEER, false); 
-            curl_setopt($curlConstellationSession, CURLOPT_SSL_VERIFYHOST, false); 
+            $constellationServerResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['constellations'] . $constellation_id);
 
-            $constellationServerResponse = curl_exec($curlConstellationSession);
-            curl_close($curlConstellationSession);
             $constellationServerResponse = json_decode($constellationServerResponse);
 
             $constellationData = [
@@ -162,22 +111,9 @@ class CreateEntries
 
     public function createStargateOrStation($entityClass, $entityId, $urlKey)
     {
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $this->eveSwaggerUrls[$urlKey . "s"] . $entityId);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
+        $serverResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')[$urlKey . "s"] . $entityId);
         
-        $serveResponse = curl_exec($ch);
-
-        if (curl_errno($ch)) {
-            echo 'CURL error: ' . curl_error($ch) . "\n";
-            return;
-        } 
-
-        curl_close($ch);
-        $serveResponse = json_decode($serveResponse);
+        $serveResponse = json_decode($serverResponse);
 
         $entityData = [
             'id' => $serveResponse->{$urlKey . '_id'},
@@ -203,14 +139,7 @@ class CreateEntries
 
     public function createIndividualSystem($system_id)
         {   
-            $curlSystemSession = curl_init();
-            curl_setopt($curlSystemSession, CURLOPT_URL, $this->eveSwaggerUrls['systems'] . $system_id);
-            curl_setopt($curlSystemSession, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curlSystemSession, CURLOPT_SSL_VERIFYPEER, false); 
-            curl_setopt($curlSystemSession, CURLOPT_SSL_VERIFYHOST, false); 
-
-            $systemServerResponse = curl_exec($curlSystemSession);
-            curl_close($curlSystemSession);
+            $systemServerResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems'] . $system_id);
             $systemServerResponse = json_decode($systemServerResponse);
 
             $systemData = [
@@ -242,27 +171,7 @@ class CreateEntries
         echo "CREATING SYSTEMS, STARGATES AND STATIONS \n";
 
         // Get the list of systems
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $this->eveSwaggerUrls['systems']);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); 
-        
-        $server_response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (curl_errno($ch)) {
-            echo 'CURL error: ' . curl_error($ch) . "\n";
-        } else if ($http_code >= 500) {
-            echo "Server error: HTTP code $http_code. Exiting...\n";
-            curl_close($ch);
-            exit(1);
-        } else {
-            echo "CURL retrieved system list successfully! \n";
-        }
-
-        curl_close($ch);
+        $server_response = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems']);
 
         $system_list = json_decode($server_response);
 

@@ -8,4 +8,4 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('v1/systems', [SystemController::class, 'index']);
+Route::get('v1/system/{id}', [SystemController::class, 'index']);
