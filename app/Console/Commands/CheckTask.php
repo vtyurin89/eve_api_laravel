@@ -29,4 +29,9 @@ class CheckTask extends Command
     {
         $deleteOldDangerRates->execute();
     }
+
+    // public function handle(UpdateDangerRatings $updateDangerRatings)
+    // {
+    //     $updateDangerRatings->execute();
+    // }
 }

@@ -76,7 +76,7 @@ class UpdateDangerRatings
 
     public function createNewRatingObjects() {
         // Only create new objects if the latest ones were created at least 59 minutes ago.
-        $minTimeInMinutes = config('constants.systemEventRates');
+        $minTimeInMinutes = config('constants.dangerRatingUpdateInMinutes');
 
         $lastDangerRating = DangerRating::latest()->first();
 
@@ -84,7 +84,6 @@ class UpdateDangerRatings
             echo "DangerRating objects were created less than 59 minutes ago. Aborting creation.\n";
         } else {
             DangerRating::insert($this->newDangerRatingValues);
-            echo "New DangerRating objects created successfully.\n";
         }
     }
 
@@ -95,7 +94,6 @@ class UpdateDangerRatings
         $this->processMissingSystems();
         $this->calculateRating();
         $this->createNewRatingObjects();
-
     }
 }
 
