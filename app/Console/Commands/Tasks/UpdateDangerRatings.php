@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Console\Commands\Tasks;
+use Carbon\Carbon;
 use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station;
 use App\Helpers\Utility;
+use App\Models\DangerRating;
 
 class UpdateDangerRatings
 {
@@ -15,6 +17,7 @@ class UpdateDangerRatings
         'ship_jumps'=> 0,
     ];
     private $allSystemData = [];
+    private $newDangerRatingValues = [];
 
     public function processSystemKills()
     {
@@ -31,7 +34,6 @@ class UpdateDangerRatings
         }
     }
     
-
     public function processSystemJumps()
     {
         $serverResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['system_jumps']);
@@ -52,8 +54,36 @@ class UpdateDangerRatings
 
         $systemIdsWhereThingsHappened = array_keys($this->allSystemData);
         $missingSystems = System::whereNotIn('id', $systemIdsWhereThingsHappened)->get();
-        foreach($missingSystems as $system) {
-            echo $system->id . "\n";
+        $missingSystemsArray = $missingSystems->mapWithKeys(function ($system) {
+            return [$system->id => $this->defaultSystemValues];
+        })->toArray();
+        $this->allSystemData = array_merge($this->allSystemData, $missingSystemsArray);
+    }
+
+    public function calculateRating() {
+        $eventRates = config('constants.systemEventRates');
+
+        $this->newDangerRatingValues = array_map(function($systemId, $system) use ($eventRates) {
+            $ratingChange = array_reduce(array_keys($system), function($carry, $key) use ($eventRates, $system) {
+                return $carry + (isset($system[$key]) ? $eventRates[$key] * $system[$key] : 0);
+            }, 0);
+            return [
+                'system_id' => $systemId,
+                'value' => $ratingChange,
+            ];
+        }, array_keys($this->allSystemData), $this->allSystemData);
+    }
+
+    public function createNewRatingObjects() {
+        // Only create new objects if the latest ones were created at least 59 minutes ago.
+        $minTimeInMinutes = config('constants.systemEventRates');
+
+        $lastDangerRating = DangerRating::latest()->first();
+        if ($lastDangerRating && $lastDangerRating->created_at->diffInMinutes(Carbon::now()) < $minTimeInMinutes) {
+            echo "DangerRating objects were created less than 59 minutes ago. Aborting creation.\n";
+        } else {
+            DangerRating::insert($this->newDangerRatingValues);
+            echo "New DangerRating objects created successfully.\n";
         }
     }
 
@@ -62,7 +92,9 @@ class UpdateDangerRatings
         $this->processSystemKills();
         $this->processSystemJumps();
         $this->processMissingSystems();
-        // print_r($this->allSystemData);
+        $this->calculateRating();
+        $this->createNewRatingObjects();
+
     }
 }
 

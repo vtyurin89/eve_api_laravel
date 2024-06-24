@@ -11,6 +11,13 @@ return [
         'system_kills'=> "https://esi.evetech.net/dev/universe/system_kills/",
         'system_jumps'=> "https://esi.evetech.net/dev/universe/system_jumps/"
     ],
+    'systemEventRates' => [
+        'ship_jumps'=> 1,
+        'ship_kills'=> 200,
+        'pod_kills'=> 200,
+        'npc_kills'=> 1,
+    ],
+    'dangerRatingUpdateInMinutes' => 59,
 ];
 
 ?>
