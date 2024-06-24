@@ -4,8 +4,6 @@ namespace App\Console\Commands\Tasks;
 use Carbon\Carbon;
 use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station, App\Models\DangerRating;
 
-use function PHPUnit\Framework\isNull;
-
 class DeleteOldDangerRates
 {
     private $timeNow;
@@ -21,8 +19,7 @@ class DeleteOldDangerRates
 
     public function countOutdatedDangerRatingObjects()
     {
-        $count = DangerRating::whereNotBetween('created_at', [$this->timeStartingPoint, $this->timeNow])->count();
-        return $count;
+        return DangerRating::whereNotBetween('created_at', [$this->timeStartingPoint, $this->timeNow])->count();
     }
 
     public function deleteOutdatedDangerRatingObjects() {
@@ -36,7 +33,4 @@ class DeleteOldDangerRates
         echo $msg;
     }
 }
-
-
-
 ?>
