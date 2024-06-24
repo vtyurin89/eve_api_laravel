@@ -18,6 +18,7 @@ return [
         'npc_kills'=> 1,
     ],
     'dangerRatingUpdateInMinutes' => 59,
+    'DangerRateLifeInHours' =>168,
 ];
 
 ?>

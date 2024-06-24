@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands\Tasks;
 use Carbon\Carbon;
-use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station;
+use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station, App\Models\DangerRating;
 use App\Helpers\Utility;
-use App\Models\DangerRating;
 
 class UpdateDangerRatings
 {
@@ -70,6 +69,7 @@ class UpdateDangerRatings
             return [
                 'system_id' => $systemId,
                 'value' => $ratingChange,
+                'created_at' => Carbon::now(),
             ];
         }, array_keys($this->allSystemData), $this->allSystemData);
     }
@@ -79,6 +79,7 @@ class UpdateDangerRatings
         $minTimeInMinutes = config('constants.systemEventRates');
 
         $lastDangerRating = DangerRating::latest()->first();
+
         if ($lastDangerRating && $lastDangerRating->created_at->diffInMinutes(Carbon::now()) < $minTimeInMinutes) {
             echo "DangerRating objects were created less than 59 minutes ago. Aborting creation.\n";
         } else {

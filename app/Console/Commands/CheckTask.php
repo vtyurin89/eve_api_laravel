@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Console\Commands\Tasks\UpdateDangerRatings;
+use App\Console\Commands\Tasks\DeleteOldDangerRates;
 
 class CheckTask extends Command
 {
@@ -24,8 +25,8 @@ class CheckTask extends Command
     /**
      * Execute the console command.
      */
-    public function handle(UpdateDangerRatings $updateDangerRatings)
+    public function handle(DeleteOldDangerRates $deleteOldDangerRates)
     {
-        $updateDangerRatings->execute();
+        $deleteOldDangerRates->execute();
     }
 }
