@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands\Tasks;
 use Carbon\Carbon;
-use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station, App\Models\DangerRating;
+use Illuminate\Support\Facades\DB;
+use App\Models\System, App\Models\DangerRating;
 use App\Helpers\Utility;
 
 class UpdateDangerRatings
@@ -83,6 +84,10 @@ class UpdateDangerRatings
         if ($lastDangerRating && $lastDangerRating->created_at->diffInMinutes(Carbon::now()) < $minTimeInMinutes) {
             echo "DangerRating objects were created less than 59 minutes ago. Aborting creation.\n";
         } else {
+            DB::transaction(function () {
+                DangerRating::insert($this->newDangerRatingValues);
+            });
+
             DangerRating::insert($this->newDangerRatingValues);
         }
     }
@@ -94,6 +99,11 @@ class UpdateDangerRatings
         $this->processMissingSystems();
         $this->calculateRating();
         $this->createNewRatingObjects();
+    }
+
+    public function __invoke()
+    {
+        $this->execute();
     }
 }
 

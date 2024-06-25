@@ -29,8 +29,4 @@ class Utility
         return $server_response;
     }
 }
-
-
-
-
 ?>

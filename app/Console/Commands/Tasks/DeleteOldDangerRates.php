@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Console\Commands\Tasks;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\Constellation, App\Models\Region, App\Models\System, App\Models\Stargate, App\Models\Station, App\Models\DangerRating;
+use App\Models\DangerRating;
 
 class DeleteOldDangerRates
 {
@@ -23,7 +24,9 @@ class DeleteOldDangerRates
     }
 
     public function deleteOutdatedDangerRatingObjects() {
-        DangerRating::whereNotBetween('created_at', [$this->timeStartingPoint,  $this->timeNow])->delete();
+        DB::transaction(function () {
+            DangerRating::whereNotBetween('created_at', [$this->timeStartingPoint,  $this->timeNow])->delete();
+        });        
     }
 
     public function execute () {
@@ -31,6 +34,11 @@ class DeleteOldDangerRates
         $outdatedObjects = $this->deleteOutdatedDangerRatingObjects();
         $msg = $deletedCount != 0 ? "$deletedCount outdated DangerRating objects deleted successfully.\n" : "No DangerRating objects deleted.\n";
         echo $msg;
+    }
+
+    public function __invoke()
+    {
+        $this->execute();
     }
 }
 ?>
