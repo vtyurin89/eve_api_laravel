@@ -14,3 +14,5 @@ Artisan::command('inspire', function () {
 Schedule::call(new UpdateDangerRatings)->hourlyAt(25);
 
 Schedule::call(new DeleteOldDangerRates)->daily();
+
+Schedule::command('model:prune')->daily();

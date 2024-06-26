@@ -18,4 +18,8 @@ class System extends Model
     {
         return $this->belongsTo('App\Models\Constellation');
     }
+
+    public function getSystemsByArray($filterArray) {
+        return $this->all();
+    }
 }
