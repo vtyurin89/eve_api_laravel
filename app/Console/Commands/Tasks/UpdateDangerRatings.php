@@ -57,7 +57,7 @@ class UpdateDangerRatings
         $missingSystemsArray = $missingSystems->mapWithKeys(function ($system) {
             return [$system->id => $this->defaultSystemValues];
         })->toArray();
-        $this->allSystemData = array_merge($this->allSystemData, $missingSystemsArray);
+        $this->allSystemData = $this->allSystemData + $missingSystemsArray;
     }
 
     public function calculateRating() {
@@ -87,8 +87,6 @@ class UpdateDangerRatings
             DB::transaction(function () {
                 DangerRating::insert($this->newDangerRatingValues);
             });
-
-            DangerRating::insert($this->newDangerRatingValues);
         }
     }
 

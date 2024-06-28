@@ -29,7 +29,9 @@ return [
 
     'dangerRatingUpdateInMinutes' => 59,
 
-    'DangerRateLifeInHours' =>168,
+    'DangerRateLifeInHours' => 168,
+
+    'queryResultCutSize' => 30,
 ];
 
 ?>

@@ -25,13 +25,13 @@ class CheckTask extends Command
     /**
      * Execute the console command.
      */
-    public function handle(DeleteOldDangerRates $deleteOldDangerRates)
-    {
-        $deleteOldDangerRates->execute();
-    }
-
-    // public function handle(UpdateDangerRatings $updateDangerRatings)
+    // public function handle(DeleteOldDangerRates $deleteOldDangerRates)
     // {
-    //     $updateDangerRatings->execute();
+    //     $deleteOldDangerRates->execute();
     // }
+
+    public function handle(UpdateDangerRatings $updateDangerRatings)
+    {
+        $updateDangerRatings->execute();
+    }
 }

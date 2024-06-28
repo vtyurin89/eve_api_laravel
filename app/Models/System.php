@@ -19,6 +19,16 @@ class System extends Model
         return $this->belongsTo('App\Models\Constellation');
     }
 
+    public function stations()
+    {
+        return $this->hasMany(Station::class);
+    }
+
+    public function dangerRatingUnits()
+    {
+        return $this->hasMany(DangerRating::class);
+    }
+
     public function getSystemsByArray($filterArray) {
         return $this->all();
     }
