@@ -11,7 +11,6 @@ class ControllerSafeSystems extends Controller
 {
     public function index(Request $request) {
         $systemSecurityLevels = config('constants.systemSecurityLevels');
-
         $security_status = $request->security_status;
         $security_status = array_key_exists($security_status, $systemSecurityLevels) ? $security_status : 'unspecified';
 
