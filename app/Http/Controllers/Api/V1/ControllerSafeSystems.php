@@ -27,7 +27,6 @@ class ControllerSafeSystems extends Controller
                 ->addBinding([$timeStartingPoint, $timeNow], 'select')
                 ->orderBy('danger_rating')
                 ->limit(config('constants.queryResultCutSize'));
-
         
         $resultJson = $systems->get()->toJson();
         return  $resultJson;
