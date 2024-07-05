@@ -22,26 +22,4 @@ class AppServiceProvider extends ServiceProvider
     {
         //
     }
-
-    // public function map()
-    // {
-    //     $this->mapApiRoutes();
-
-    //     $this->mapWebRoutes();
-
-    //     // Other route mappings...
-    // }
-
-    // protected function mapApiRoutes()
-    // {
-    //     Route::prefix('api')
-    //         ->middleware('api')
-    //         ->group(base_path('routes/api.php'));
-    // }
-
-    // protected function mapWebRoutes()
-    // {
-    //     Route::middleware('web')
-    //         ->group(base_path('routes/web.php'));
-    // }
 }
