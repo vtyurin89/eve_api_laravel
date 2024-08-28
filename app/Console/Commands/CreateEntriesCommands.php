@@ -24,6 +24,7 @@ class CreateEntriesCommands extends Command
     /**
      * Execute the console command.
      */
+    
     public function handle(CreateEntries $createEntries)
     {
         $createEntries->createAll();
