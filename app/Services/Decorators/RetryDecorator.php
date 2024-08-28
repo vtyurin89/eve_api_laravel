@@ -9,7 +9,7 @@ class RetryDecorator
     protected $maxRetries;
     protected $sleepSeconds;
 
-    public function __construct(callable $function, $maxRetries = 10, $sleepSeconds = 1)
+    public function __construct(callable $function, $maxRetries = 30, $sleepSeconds = 2)
     {
         $this->function = $function;
         $this->maxRetries = $maxRetries;

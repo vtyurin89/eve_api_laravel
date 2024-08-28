@@ -166,9 +166,9 @@ class CreateEntries
             return $systemServerResponse;
         }
 
-    public function createSystemsStargatesStations()
+    public function createSystems()
     {
-        echo "CREATING SYSTEMS, STARGATES AND STATIONS \n";
+        echo "CREATING SYSTEMS \n";
 
         // Get the list of systems
         $server_response = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems']);
@@ -191,7 +191,34 @@ class CreateEntries
                 echo "Function failed after max retries: " . $e->getMessage() . "\n";
                 throw new Exception("Something went wrong when creating a System!");
             }
+            
+            // Maximum 30 requests per second
+            if (intval($system_id) % 30 === 0 ) {
+                echo "SLEEPING \n";
+                sleep(1);
+            }
+            $previous_index = $index;
+        }
+        echo "SYSTEMS CREATED! \n";
+    }
 
+    public function createStargates() {
+        echo "CREATING STARGATES \n";
+
+        // Get the list of systems
+        $server_response = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems']);
+
+        $system_list = json_decode($server_response);
+
+        $previous_index = -1;
+        foreach($system_list as $index => $system_id){
+            if ($index - $previous_index != 1) {
+                echo "INDEX MISMATCH, abort function \n";
+                break;
+            }
+            
+            $systemServerResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems'] . $system_id);
+            $systemServerResponse = json_decode($systemServerResponse);
 
             // Creating stargates 
             if (isset($systemServerResponse->stargates)) {
@@ -205,6 +232,33 @@ class CreateEntries
                     }
                 }
             }
+            if (intval($system_id) % 5 === 0 ) {
+                echo "SLEEPING \n";
+                sleep(1);
+            }
+            $previous_index = $index;
+        }
+        echo "STARGATES CREATED! \n";
+    }
+
+    
+    public function createStations() {
+        echo "CREATING STATIONS \n";
+
+        // Get the list of systems
+        $server_response = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems']);
+
+        $system_list = json_decode($server_response);
+
+        $previous_index = -1;
+        foreach($system_list as $index => $system_id){
+            if ($index - $previous_index != 1) {
+                echo "INDEX MISMATCH, abort function \n";
+                break;
+            }
+            
+            $systemServerResponse = Utility::curlConnectAndGetResponse(config('constants.eveSwaggerUrls')['systems'] . $system_id);
+            $systemServerResponse = json_decode($systemServerResponse);
 
             // Creating stations
             if (isset($systemServerResponse->stations)) {
@@ -217,22 +271,24 @@ class CreateEntries
                         throw new Exception("Something went wrong when creating a Station!");
                     }
                 }
-            }
-            
-            // Maximum 30 requests per second
-            if (intval($system_id) % 30 === 0 ) {
+            } 
+
+            if (intval($system_id) % 5 === 0 ) {
                 echo "SLEEPING \n";
                 sleep(1);
             }
             $previous_index = $index;
         }
-        echo "FUNCTION FINISHED";
+        echo "STATIONS CREATED! \n";
     }
+
 
     public function createAll() {
         $this->createRegions();
         $this->createConstellations();
-        $this->createSystemsStargatesStations();
+        $this->createSystems();
+        $this->createStargates();
+        $this->createStations();
     }
 }
 
